@@ -19,13 +19,13 @@ This case study was designed under an ECDC service contract for the development 
 This case study is based on an investigation conducted by Jurgita Pakalniskiene, Gerhard Falkenhorst (Statens Serum Institut, Copenhagen) and colleagues
 
 **Authors:**
-Jurgita Pakalniskiene, Gerhard Falkenhorst, Esther Kissling, Gilles Desvé
+Jurgita Pakalniskiene, Gerhard Falkenhorst, Esther Kissling, Gilles Desv?
 
 **Reviewers:**
 Marta Valenciano, Alain Moren.
 
 **Adaptions for previous modules:**
-Irina Czogiel, Kristin Tolksdorf, Michaela Diercke, Sybille Somogyi, Christian Winter, Sandra Dudareva-Vizule with the help of Katharina Alpers, Alicia Barrasa, Androulla Efstratiou, Steen Ethelberg, Annette Heißenhuber, Aftab Jasir, Ioannis Karagiannis and Pawel Stefanoff
+Irina Czogiel, Kristin Tolksdorf, Michaela Diercke, Sybille Somogyi, Christian Winter, Sandra Dudareva-Vizule with the help of Katharina Alpers, Alicia Barrasa, Androulla Efstratiou, Steen Ethelberg, Annette Hei?enhuber, Aftab Jasir, Ioannis Karagiannis and Pawel Stefanoff
 
 **You are free:**
 
@@ -104,7 +104,7 @@ setwd("E:/R Case studies/Outbreak module 2015/Copenhagen")
 
 ```{r, eval=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Installing required packages for the week
-required_packages <- c("xlsx","foreign", "ggplot2","Hmisc", "epiDisplay", "epiR") 
+required_packages <- c("readxl", "foreign", "ggplot2", "Hmisc", "epiDisplay", "epiR") 
 install.packages(required_packages)
 ```
 
@@ -113,11 +113,14 @@ Run the following code at the beginning of the day to make sure that you have ma
 
 ```{r, echo = TRUE, results='hide', message=FALSE, warning=FALSE}
 # Loading required packages for the week
-required_packages <- c("xlsx","foreign", "ggplot2", "Hmisc", "epiDisplay", "epiR","knitr") 
-
-
-for (i in seq(along = required_packages))
-  library(required_packages[i], character.only = TRUE)
+library("readxl")
+library("foreign")
+library("ggplot2")
+library("Hmisc")
+library("epiDisplay")
+library("epiR")
+library("knitr")
+library("here")
 ```
 
 ```{r}
@@ -160,7 +163,7 @@ Datasets in *R* are stored and can be referred to using the name it is saved as 
 #data frame read in and saved in R as "cph"
 
 
-cph <- read.csv("Copenhagen_raw.csv", sep=",", stringsAsFactors = FALSE) 
+cph <- read.csv(here("Stata_data", "copenhagen_raw.csv"), sep=",", stringsAsFactors = FALSE) 
 ```
 
 ###Browsing your dataset 
