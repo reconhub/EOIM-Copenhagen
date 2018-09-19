@@ -19,13 +19,13 @@ This case study was designed under an ECDC service contract for the development 
 This case study is based on an investigation conducted by Jurgita Pakalniskiene, Gerhard Falkenhorst (Statens Serum Institut, Copenhagen) and colleagues
 
 **Authors:**
-Jurgita Pakalniskiene, Gerhard Falkenhorst, Esther Kissling, Gilles Desv?
+Jurgita Pakalniskiene, Gerhard Falkenhorst, Esther Kissling, Gilles Desv{\'e}
 
 **Reviewers:**
 Marta Valenciano, Alain Moren.
 
 **Adaptions for previous modules:**
-Irina Czogiel, Kristin Tolksdorf, Michaela Diercke, Sybille Somogyi, Christian Winter, Sandra Dudareva-Vizule with the help of Katharina Alpers, Alicia Barrasa, Androulla Efstratiou, Steen Ethelberg, Annette Hei?enhuber, Aftab Jasir, Ioannis Karagiannis and Pawel Stefanoff
+Irina Czogiel, Kristin Tolksdorf, Michaela Diercke, Sybille Somogyi, Christian Winter, Sandra Dudareva-Vizule with the help of Katharina Alpers, Alicia Barrasa, Androulla Efstratiou, Steen Ethelberg, Annette Hei{\ss}enhuber, Aftab Jasir, Ioannis Karagiannis and Pawel Stefanoff
 
 **You are free:**
 
