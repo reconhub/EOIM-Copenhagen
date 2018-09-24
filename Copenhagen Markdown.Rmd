@@ -63,11 +63,16 @@ In the study, the following case definition was used: a case is a person from th
 
 \pagebreak
 
-# An introduction to the R companion# 
+# An introduction to the R companion 
 
 
-### Setting your working directory 
-Just as in STATA you can set a folder to be your working directory (using the setwd command).  
+### Your R Workflow
+
+We will be using RStudio projects to separate our sessions into distinct workflows.
+For each session, you will open R by double-clicking on the `.Rproj` file, or opening RStudio and selecting the session from the upper-right-hand dropdown menu.
+
+> Just as in STATA you can set a folder to be your working directory (using the setwd command), but we will not be using this because it makes transferring between computers difficult (see <https://www.tidyverse.org/articles/2017/12/workflow-vs-script/> for details). Instead, we will be using the RStudio project files and the 'here' package to keep track of files.
+
 For this case study I have put an "MSF Training" folder on my desktop and organised it in to sub-folders for each session.
 
 <!-- ZNK: This needs to change to be updated to the current course -->
@@ -77,17 +82,7 @@ For this case study I have put an "MSF Training" folder on my desktop and organi
 > side note: see appendix if you would like to read in STATA datafiles directly*
 
 
-
-```{r, eval=F}
-
-setwd("C:/Users/Desktop/MSF Training/Copenhagen/")
-
-```
-
-
 ### Installing packages and functions
-
-
 
 R packages are bundles of functions which extend the capability of R. Thousands of add-on packages are available in the main online repository (known as CRAN) and many more packages in development can be found on GitHub. They may be installed and updated over the Internet.
 
@@ -96,7 +91,7 @@ We will mainly use packages which come ready installed with R (base code), but w
 
 ```{r, eval=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Installing required packages for the week
-required_packages <- c("readxl", "foreign", "ggplot2", "Hmisc", "epiDisplay", "epiR") 
+required_packages <- c("readxl", "haven", "ggplot2", "Hmisc", "epiDisplay", "epiR") 
 install.packages(required_packages)
 ```
 
@@ -106,7 +101,7 @@ Run the following code at the beginning of the day to make sure that you have ma
 ```{r, echo = TRUE, results='hide', message=FALSE, warning=FALSE}
 # Loading required packages for the week
 library("readxl")
-library("foreign")
+library("haven")
 library("ggplot2")
 library("Hmisc")
 library("epiDisplay")
@@ -118,17 +113,17 @@ library("here")
 ```{r}
 # Functions required
 # Adds a function to create epicurves
-source("epicurve.v.1.8.R") 
+source(here("scripts", "epicurve.v.1.8.R")) 
 
 # Adds a function to create output similar to cctable or cstable in Stata
-source("single.variable.analysis.v0.2.R") 
+source(here("scripts", "single.variable.analysis.v0.2.R")) 
 ```
 
 R and Stata have minor differences in default settings and methods. In this document we will follow the Stata analysis as closely as possible, but small and usually unimportant differences may be noted between the statistical findings in R and those in Stata. At some points additional steps (which would usually be optional in R) will be taken to produce output which is comparable to that of Stata.
 
 The epicurve function allows creation of easily formatted epicurves. To find out more about the function, first load it as above and then click on function in the **Global Environment** tab on the right of the R Studio window. The **single variable analysis** function allows calculation of attack rates of multiple variables at one time and provides similar output to the cctable and cstable commands in Stata.
 
-You will work with Stata.dta data sets which can be loaded into R with the "foreign" or "readstata13" packages. The appropriate functions to use will be indicated.
+You will work with Stata.dta data sets which can be loaded into R with the "haven" or "readstata13" packages. The appropriate functions to use will be indicated.
 
 R can hold one or many data sets in memory simultaneously, so there is usually no need to save intermediate files or close and re-open datasets.
 
@@ -161,10 +156,9 @@ cph <- read.csv(here("Stata_data", "copenhagen_raw.csv"), sep=",", stringsAsFact
 ### Browsing your dataset 
 *R studio* has the nice feature that everything is in one browser window, so you can browse your dataset and your code without having to switch between browser windows. 
 
-```{r, eval=F}
+```{r, eval = FALSE}
 # to browse your data, use the View command
 View(cph)
-
 ```
 
 Alternatively, you can also view your dataset by clicking on *cph* in the top right "global environment" panel of your *R studio* browser.  
@@ -188,7 +182,7 @@ If you click on the code in the History tab, it will re-run.
 ### Describing your dataset 
 You can view the structure of your data set using the following commands. Each of these commands can be run for individual variables also. You can refer to an individual variable of a data set by using the `$`, for example, if you wanted to obtain a summary of the age variable, then you would write `summary(cph$age)`.  
 
-```{r, eval=F}
+```{r, eval = FALSE}
 # str provides an overview of the number of observations and variable types
 str(cph)
 
@@ -196,10 +190,10 @@ str(cph)
 summary(cph)
 
 # describe (from Hmisc package) provides no. of observations, missing values, unique levels of each variable
-describe(cph) 
+Hmisc::describe(cph) 
 ```
 
-
+> **n.b.** we are using the convention package::function() to make it clear when we are using a function that comes from an external package.
 
 # Data cleaning and recoding in *R*  
 
@@ -234,7 +228,6 @@ table(cph$age)
 
 # summary gives you more detailed statistics as in stata
 summary(cph$age)
-
 ```
 
 
@@ -250,14 +243,29 @@ table(cph$age[cph$group == 0])
 summary(cph$incubation) 
 
 # people did not have dinner but ate tuna, bread or veal
-  # you can label the table with deparse.level
-table(cph$meal, cph$tuna, deparse.level = 2)
-table(cph$meal, cph$bread, deparse.level = 2)
-table(cph$meal, cph$veal, deparse.level = 2)
+  # you can label the table by adding labels
+table(meal = cph$meal, tuna = cph$tuna)
+table(meal = cph$meal, bread = cph$bread)
+table(meal = cph$meal, veal = cph$veal)
 
 # people with day of onset but no symptoms
   # is.na() returns True/False if value is missing
   # So this selects the participants that are either 0 or missing for all three symptoms
+no_symptoms <- function(x){
+  x != 1 | is.na(x)
+}
+
+table(cph$start[no_symptoms(cph$diarrhoea) & 
+                no_symptoms(cph$vomiting)  &
+                no_symptoms(cph$bloody)    ])
+# We can also gather the data first
+subset_of_no_symptoms <- no_symptoms(cph$diarrhoea)
+subset_of_no_symptoms <- subset_of_no_symptoms & no_symptoms(cph$vomiting)
+subset_of_no_symptoms <- subset_of_no_symptoms & no_symptoms(cph$bloody)
+table(cph$start[subset_of_no_symptoms])
+
+# We can also gather everything into one command, but this is a bit uglier
+# and more prone to error
 table(cph$start[(cph$diarrhoea != 1 | is.na(cph$diarrhoea)) & 
                   (cph$vomiting != 1 | is.na(cph$vomiting) & 
                      (cph$bloody != 1 | is.na(cph$bloody))) ])
@@ -361,7 +369,7 @@ cph <- cph[!is.na(cph$case), ]
 You can save your cleaned dataset as an R datafile (.Rda) using the *save* command and re-load the same dataset using the *load* command. 
 In reality you would never do this; your code should be stand-alone in that raw data is read and cleaned and analysis comes thereafter. 
 But if you wanted to, this is how you would do it. 
-```{r, eval= F}
+```{r, eval = FALSE}
 
 # save your dataset
 save(cph, file = "cph.Rda")
@@ -806,7 +814,7 @@ The *sva* function (Daniel Gardner, PHE) basically integrates the steps from abo
 
 ```{r}
 # You already sourced the function at the begining of this case study 
-# if you havent then type: source("single.variable.analysis.v0.2.R")
+# if you havent then type: source(here("scripts", "single.variable.analysis.v0.2.R"))
 # nb. click on "sva" in your global environment to view source code and read explanations
 
 # cohort study
@@ -1068,7 +1076,7 @@ outputs # Gives crude, stratum-specific and adjusted RRs
 The exact same can be done for veal (switch veal and pasta)
 
 
-```{r, eval = F}
+```{r, eval = FALSE}
 
 
 # We list the exposure variables
@@ -1144,39 +1152,24 @@ This is easily done, if you have saved each of your analyses in a seperate scrip
 
 ## Reading in datafiles to *R* from other formats (STATA and Excel)
 
-In *R* you can read datasets saved in STATA format (.dta), using a package called "foreign". 
-See *??read.dta* for details
+In *R* you can read datasets saved in STATA format (.dta), using a package called "haven". 
+See *??read_dta* for details
 
-```{r, eval=F}
+```{r, eval = FALSE}
 
-library(foreign)
+library(haven)
 
-cph <- read.dta("Copenhagen/Session 3/Copenhagen3.dta")
-
-```
-
-
-For reading newer Stata versions (past 12), you can use readstata13 or the haven packages. 
-
-
-```{r, eval = F}
- 
-library(readstata13)
-cph <- read.dta13("Copenhagen/copenhagen_raw.dta")
+cph <- read_dta("Copenhagen/Session 3/Copenhagen3.dta")
 
 ```
 
 
 
-It is also possible to read in excel files using a package called "xlsx". 
+It is also possible to read in excel files using a package called "readxl". 
 
-```{r, eval = F}
-
+```{r, eval = FALSE}
 library("readxl")
-
 cph <- read_excel("Copenhagen/Session 3/Copenhagen3.xlsx")
-
-
 ```
 
 
@@ -1190,7 +1183,7 @@ If you are feeling confident then take a look at the code - if not just skip it!
 
 <!-- ZNK: it may be better to write to csv as opposed to excel? -->
 
-```{r, eval=F}
+```{r, eval = FALSE}
 
 a<-matrix(NA, ncol = 4, nrow = 8)
 
@@ -1240,7 +1233,7 @@ Note: several lines of code have been turned to comments (# png(...) and # dev.o
 
 
 
-```{r, tidy=T, eval = F}
+```{r, tidy=T, eval = FALSE}
 # table to use in plotting 
 count<-table(cph$startdate)
 
@@ -1281,7 +1274,7 @@ mtext(text="Cases (n)",
 
 ## Creating time levels with coding rather than typing it out 
 
-```{r, eval = F}
+```{r, eval = FALSE}
 
 a <- expand.grid(c("0","6","12", "18"), paste0("2006-11-", 10:14))
 

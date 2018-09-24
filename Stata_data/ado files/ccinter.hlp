@@ -1,0 +1,90 @@
+{smcl}
+{* 02apr2007}{...}
+{cmd:help ccinter}
+{hline}
+
+{title:Tools for Epidemiologie}
+	
+	For Stata version 8.0 or higher
+    Calculates interaction.
+    Gilles Desve, 
+	In collaboration with Alain Moren and Aurelio Tobias
+    Cohort analysis for outbreak investigation.
+
+	
+{title:Summary table for cohort study}
+
+
+{title:Syntax}
+
+{p 8 17 2}
+{cmdab:ccinter}
+{varlist}
+{ifin}
+[{cmd:,} {it:options}]
+
+{synoptset 20 tabbed}{...}
+{synopthdr}
+{synoptline}
+{syntab:Main}
+{synopt:{opth by(varname)}}Select the variable used for stratum.{p_end}
+{synopt:}These option should allways be used.{p_end}
+
+{synopt:{opt table}}Displays a summary table for interaction{p_end}
+{synopt:{opt plot}}Plots the effect modification{p_end}
+{synoptline}
+{p2colreset}{...}
+{p 4 6 2}
+{cmd:by} may not be used with {cmd:ccinter}.{p_end}
+
+
+{title:Description}
+
+{pstd}
+{cmd:ccinter} 
+produce 2 by 2 tables with stratum specific risk difference, risk ratios, attributable risk among exposed
+and population attribuable risk.
+Displays a summary with the Mantel Haenszel RR and the result of a Woolf test for homogeneity.
+Aslo computes additive interaction (biological interaction)
+
+{pstd}
+Result could be copied with "copy table" in order to be pasted in Excel.  
+
+{title:Options}
+
+{dlgtab:Main}
+
+{phang}
+{cmd:by} selects variable used for stratum.
+
+{phang}
+{cmd:table} Displays a summary table for interaction
+
+{phang}
+{cmd:plot} Plots the effect modification
+
+{title:Remarks}
+{pstd}
+As with the {helpb cc} commande, variables used with {cmd:ccinter} must be coded as 0/1. {p_end}
+{pstd}
+For detailed information see www.epiconcept.fr/stata.
+{p_end}
+
+{title:Examples}
+
+{phang}{cmd:. csinter ill mousse, by(tiramisu) } {p_end}
+{p 4 6 2} 
+The result table is stratified by tiramisu {p_end}
+
+
+{title:Also see}
+{helpb cctable}, {helpb cstable}, {helpb cs}, {helpb csinter}.
+
+{psee}
+Manual:  
+
+{psee}
+Online:  
+
+{p 4 6 2} 
+

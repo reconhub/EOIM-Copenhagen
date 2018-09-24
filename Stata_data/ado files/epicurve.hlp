@@ -1,0 +1,89 @@
+{smcl}
+{* 02apr2007}{...}
+{cmd:help epicurve}
+{hline}
+
+{title:Tools for Epidemiologie}
+	
+    Displays an Epidemic curve (one case = one square)
+    Gilles Desve, 2006 
+    In collaboration with Alain Moren
+    Cohort analysis for outbreak investigation.
+
+	
+{title:Epidemic curve for outbreak investigation}
+
+
+{title:Syntax}
+
+{p 8 17 2}
+{cmdab:epicurve}
+time_variable [outcome]
+{ifin}
+[{cmd:,} {it:options}]
+
+{synoptset 20 tabbed}{...}
+{synopthdr}
+{synoptline}
+{syntab:Main}
+{synopt:{opt title(string)}}Define the main title; Default : Epidemic curve{p_end}
+{synopt:{opt subtitle(string)}}Define the subtitle; Default : Label of the dataset{p_end}
+{synopt:{opt xtitle(string)}}Define the x-axis title; Default : Label of time variable{p_end}
+{synopt:{opt ytitle(string)}}Define the y-axis title; Default : Count{p_end}
+{synopt:{opt caption(string)}}Define the caption; Default : Current date{p_end}
+{synoptline}
+{p2colreset}{...}
+{p 4 6 2}
+{cmd:by} may not be used with {cmd:epicurve}.{p_end}
+
+
+{title:Description}
+
+{pstd}
+{cmd:epicurve} displays an epidemic curve respecting the rule : one case = one square. The time variable is used for the x-axis. If specified, the outcome variable is used to select observations. The observation is show on the graph if the value of outcome variable is different of 0.
+{p_end}
+{pstd}
+The graph option accepts all standard graph options 
+{p_end}
+
+{title:Options}
+
+{dlgtab:Main}
+
+{phang}
+{cmd:title(string)} specifies the overall title of the graph.  The title appears centered at the top of the graph.
+
+{phang}
+{cmd:subtitle(string)} specifies the subtitle of the graph.  The subtitle appears  directly under the title 
+        and is presented in a slightly smaller font.
+
+{phang}
+{cmd:ytitle(string), xtitle(string)} ytitle(axis_title)and xtitle(axis_title) specify the titles to appear on the y, x.
+        
+.
+
+{title:Remarks}
+{pstd}
+Results are not guaranted when the number of cases is high or when period is long. {p_end}
+{pstd}
+Send your example to help us improve accuracy of output {p_end}
+{pstd}
+For detailed information see www.epiconcept.fr/stata.
+{p_end}
+
+{title:Examples}
+
+{phang}{cmd:. epicurve dayonset }
+
+{phang}{cmd:. epicurve dayonset if ill == 1} {p_end}
+{p 4 6 2} 
+The epidemic curve is based on dayonset for cases (ill is equal to one) {p_end}
+
+
+{title:Also see}
+
+{psee}
+Manual:  
+
+{psee}
+Online:  {helpb cs}
