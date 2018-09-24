@@ -69,9 +69,12 @@ In the study, the following case definition was used: a case is a person from th
 ### Setting your working directory 
 Just as in STATA you can set a folder to be your working directory (using the setwd command).  
 For this case study I have put an "MSF Training" folder on my desktop and organised it in to sub-folders for each session.
-*nb.you can of course organise your files however you want and set your working directory accordingly - the simplest case is to put all datasets in a folder called "Outbreak module 2015", and not separate in to sessions*
 
-*side note: see appendix if you would like to read in STATA datafiles directly*
+<!-- ZNK: This needs to change to be updated to the current course -->
+
+> nb.you can of course organise your files however you want and set your working directory accordingly - the simplest case is to put all datasets in a folder called "Outbreak module 2015", and not separate in to sessions
+
+> side note: see appendix if you would like to read in STATA datafiles directly*
 
 
 
