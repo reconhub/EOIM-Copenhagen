@@ -8,6 +8,9 @@
 # Author: Daniel Gardiner
 # Contact: daniel.gardiner@phe.gov.uk
 # date: 08.02.2017
+# 
+# Edited by Zhian N. Kamvar to remove explicit library call within the function
+# date: 2019-09-26
 
 sva = function(data, outcome = "outcome", 
                   exposures = c("exposure1", "exposure2"), 
@@ -29,7 +32,6 @@ sva = function(data, outcome = "outcome",
   #                                  if FALSE gives restricted results
   #
   # output: a data.frame containing results for each exposure
-  library(epitools)
   
   out = as.numeric(data[, which(colnames(data) == outcome)])
   
@@ -38,15 +40,15 @@ sva = function(data, outcome = "outcome",
   for(i in exposures){
     exp = as.numeric(data[, which(colnames(data) == i)])
     
-    t = epitable(exp, out)
+    t = epitools::epitable(exp, out)
     
     # calculate either risk ratios or odds ratios
     if(measure == "rr"){
-      y = c(round(riskratio(t)$measure[2,], digits=3),
-            round(riskratio(t)$p.value[2,2], digits=6))
+      y = c(round(epitools::riskratio(t)$measure[2,], digits=3),
+            round(epitools::riskratio(t)$p.value[2,2], digits=6))
     } else if (measure == "or") {
-      y = c(round(oddsratio.wald(t)$measure[2,], digits=3),
-            round(oddsratio.wald(t)$p.value[2,2], digits=6))
+      y = c(round(epitools::oddsratio.wald(t)$measure[2,], digits=3),
+            round(epitools::oddsratio.wald(t)$p.value[2,2], digits=6))
     } else { 
       stop("select measure either 'rr' (risk ratio) or 'or' (odds ratio)")
     }
