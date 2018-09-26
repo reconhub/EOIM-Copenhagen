@@ -90,7 +90,7 @@ We will mainly use packages which come ready installed with R (base code), but w
 
 ```{r install_packages, eval=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Installing required packages for the week
-required_packages <- c("readxl", "ggplot2", "Hmisc", "epiDisplay", "epiR", "incidence", "knitr", "here") 
+required_packages <- c("readxl", "ggplot2", "Hmisc", "epitools", "epiDisplay", "epiR", "incidence", "knitr", "here") 
 install.packages(required_packages)
 ```
 
