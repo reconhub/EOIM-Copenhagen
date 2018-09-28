@@ -90,7 +90,7 @@ We will mainly use packages which come ready installed with R (base code), but w
 
 ```{r install_packages, eval=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Installing required packages for the week
-required_packages <- c("readxl", "ggplot2", "Hmisc", "epitools", "epiDisplay", "epiR", "incidence", "knitr", "here") 
+required_packages <- c("ggplot2", "skimr", "Hmisc", "epitools", "epiR", "incidence", "here") 
 install.packages(required_packages)
 ```
 
@@ -99,14 +99,11 @@ install.packages(required_packages)
 Run the following code at the beginning of the day to make sure that you have made available all the packages and functions that you need. Be sure to include it in any scripts too.
 
 ```{r load_packages, echo = TRUE, results='hide', message=FALSE, warning=FALSE}
-# Loading required packages for the week
-library("readxl")
 library("ggplot2")
+library("skimr")
 library("Hmisc")
-library("epiDisplay")
 library("epiR")
 library("incidence")
-library("knitr")
 library("here")
 ```
 
@@ -146,7 +143,7 @@ Datasets in *R* are stored and can be referred to using the name it is saved as 
 # data frame read in and saved in R as "cph"
 
 
-cph <- read.csv(here::here("data/copenhagen_raw.csv"), stringsAsFactors = FALSE)
+cph <- read.csv(here::here("data", "copenhagen_raw.csv"), stringsAsFactors = FALSE)
 ```
 
 ### Browsing your dataset 
@@ -165,9 +162,9 @@ Your global environment is where you can see all the datasets, functions and oth
 
 ### Saving your code in R Scripts
 R scripts are the equivalent of .do files in STATA. You can save your code in these R scripts. (see figure 2 below) 
-You can write comments in your code using "# "
+You can write comments in your code using "`# `"
 
-![Creating a new R-script in R studio](Screenshot2.png) -->
+![Creating a new R-script in R studio](Screenshot2.png)
 
 ## Log-files 
 
@@ -176,7 +173,8 @@ If you click on the code in the History tab, it will re-run.
 
 
 ### Describing your dataset 
-You can view the structure of your data set using the following commands. Each of these commands can be run for individual variables also. You can refer to an individual variable of a data set by using the `$`, for example, if you wanted to obtain a summary of the age variable, then you would write `summary(cph$age)`.  
+
+You can view the structure of your data set using the following commands. Each of these commands can be run for individual variables also. You can refer to an individual variable of a data set by using the `$`, for example, if you wanted to obtain a summary of the age variable, then you would write `summary(cph$age)`.
 
 ```{r describe, eval = FALSE}
 # str provides an overview of the number of observations and variable types
@@ -185,8 +183,10 @@ str(cph)
 # summary provides information of variable class as well as extra details for numeric variables
 summary(cph)
 
-# describe (from Hmisc package) provides no. of observations, missing values, unique levels of each variable
-Hmisc::describe(cph) 
+# skim (from skimr) and describe (from Hmisc package) both provide
+#   number of observations, missing values, unique levels of each variable
+skimr::skim(cph)
+Hmisc::describe(cph)
 ```
 
 > **n.b.** we are using the convention package::function() to make it clear when we are using a function that comes from an external package.
@@ -201,7 +201,7 @@ In the example below we look at age in the cph dataset.
 
 You can examine a variable within a dataset using the `$` sign and then the variable name (e.g. `cph$age`). 
 Alternatively, you can also refer to a dataset using square brackets, the part before a comma refers to the rows and after refers to columns (named or numerically). Or visually: `cph[row , column]`.
-For example: `cph[ , "age"]` gives you the variable age as a vector, or `cph[2:4 , ]` gives you rows two to four. 
+For example: `cph[, "age"]` gives you the variable age as a vector, or `cph[2:4, ]` gives you rows two to four. 
 
 You can subset a dataset using `[...]` in combination with double-equals (`==`), does not equal (`!=`), and less or greater than (`<`, `>`).
     
@@ -212,7 +212,7 @@ The **`|`** stands for **or** whereas the **`&`** stands for **and**.
 To select cases which are empty, use `is.na()`, for those which are not, `!is.na(...)`. 
 The exclamation mark ("`!`") implies "not" in this situation. 
 
-New variables are easily created in R simply by using the $ sign after the dataset name and writing a name not already in the dataset, then defining what should go in that variable.
+You can add new variables to a data frame by using the `$` sign after the dataset name and writing a name not already in the dataset, then defining what should go in that variable.
 
 
 
@@ -226,6 +226,13 @@ table(cph$age)
 summary(cph$age)
 ```
 
+Often, plotting the data can be much more informative. For example, instead of using table, we can plot a boxplot of age to see if we have any outliers:
+
+```{r histogram_of_age}
+boxplot(cph$age)
+```
+
+> Question: Is there anything weird about these data?
 
 \pagebreak 
 
@@ -251,20 +258,9 @@ no_symptoms <- function(x){
   x != 1 | is.na(x)
 }
 
-table(cph$start[no_symptoms(cph$diarrhoea) & 
-                no_symptoms(cph$vomiting)  &
-                no_symptoms(cph$bloody)    ])
-# We can also gather the data first
-subset_of_no_symptoms <- no_symptoms(cph$diarrhoea)
-subset_of_no_symptoms <- subset_of_no_symptoms & no_symptoms(cph$vomiting)
-subset_of_no_symptoms <- subset_of_no_symptoms & no_symptoms(cph$bloody)
-table(cph$start[subset_of_no_symptoms])
-
-# We can also gather everything into one command, but this is a bit uglier
-# and more prone to error
-table(cph$start[(cph$diarrhoea != 1 | is.na(cph$diarrhoea)) & 
-                  (cph$vomiting != 1 | is.na(cph$vomiting) & 
-                     (cph$bloody != 1 | is.na(cph$bloody))) ])
+table(onset = cph$start[no_symptoms(cph$diarrhoea) &
+                        no_symptoms(cph$vomiting)  &
+                        no_symptoms(cph$bloody)    ])
 ```
 
 
@@ -280,7 +276,7 @@ table(cph$start[(cph$diarrhoea != 1 | is.na(cph$diarrhoea)) &
 ```{r data_cleaning}
 
 # correct mistakes in age
-cph$age[cph$age == 8] <- 18
+cph$age[cph$age == 8]   <- 18
 cph$age[cph$age == 180] <- 18
 
 # calculate your own age variable based on birthday
@@ -296,9 +292,10 @@ cph$incubation[cph$incubation == 210] <- 21
 # Correct mistake regarding onset start
   # Those who have no symptoms should also not have an onset date
   # So this is selecting those that are 0 or empty for each of the three symptoms
-cph$start[(cph$diarrhoea == 0 | is.na(cph$diarrhoea)) & 
-                  (cph$vomiting == 0 | is.na(cph$vomiting) & 
-                     (cph$bloody == 0 | is.na(cph$bloody))) ] <-  NA
+  # We can use the no_symptoms function we defined above and place them into a vector
+symptomless_dvb <- no_symptoms(cph$diarrhoea) & no_symptoms(cph$vomiting) & no_symptoms(cph$bloody)
+table(symptomless_dvb) # how many were symptomless?
+cph$start[symptomless_dvb] <-  NA
 
 # re-code sex in to binary
 cph$sex <- ifelse(cph$sex == "male", 1, 0)
@@ -318,14 +315,12 @@ cph$case <- 0
 cph$case[cph$diarrhoea == 1 | cph$vomiting == 1] <- 1
 
 # replace those who had onset before 11th nov 18:00 or after 13th nov 18:00
+before_11_nov <-  cph$start == 1 & cph$starthour < 4
+after_13_nov  <- (cph$start == 3 & cph$starthour > 3) | cph$start > 3
 
-cph$case[cph$case == 1 & 
-            ((cph$start == 1 & cph$starthour < 4) |
-               (cph$start == 3 & cph$starthour > 3)| 
-                 cph$start > 3)] <- 0
+cph$case[cph$case == 1 & (before_11_nov | after_13_nov)] <- 0
 
 cph$case[is.na(cph$meal) | cph$meal == 0] <- NA
-
 ```
 
 
@@ -362,21 +357,34 @@ cph <- cph[!is.na(cph$case), ]
 
 ### saving cleaned data 
 
-You can save your cleaned dataset as an R datafile (.Rda) using the *save* command and re-load the same dataset using the *load* command. 
-In reality you would never do this; your code should be stand-alone in that raw data is read and cleaned and analysis comes thereafter. 
-But if you wanted to, this is how you would do it. 
+You can save your cleaned data set in two ways:
+
+ 1. as a flat csv file.
+ 2. as a binary R data file (`*.rds`).
+
+Saving as a flat csv file means that it's easier to inspect and move the data between non-R programs, but you lose any special formatting or attributes you may have attached to it. 
+Saving as an R data file allows you to seamlessly move data between R sessions without worry that it will accidentally change formatting. 
+
+Saving your intermediate, cleaned data set allows you to perform multi-facetted analyses with the same data set and avoid having to re-clean it over and over again. 
+<!-- You can save your cleaned dataset as an R datafile (.Rda) using the *save* command and re-load the same dataset using the *load* command.  -->
+<!-- In reality you would never do this; your code should be stand-alone in that raw data is read and cleaned and analysis comes thereafter.  -->
+<!-- But if you wanted to, this is how you would do it.  -->
+
 ```{r, eval = FALSE}
+# save as a flat csv file:
+write.csv(cph, file = here::here("data", "clean_copenhagen.csv"), row.names = FALSE)
+# read the file
+cph2 <- read.csv(file = here::here("data", "clean_copenhagen.csv"), stringsAsFactors = FALSE)
+identical(cph, cph2)
 
-# save your dataset
-save(cph, file = "cph.Rda")
-
-# load your dataset 
-
-load("cph.Rda")
-
+# save as a R data file
+saveRDS(cph, file = here::here("data", "clean_copenhagen.rds"))
+# read in the file
+cph2 <- readRDS(file = here::here("data", "clean_copenhagen.rds"))
+identical(cph, cph2)
 ```
 
-
+Throughout the tutorial, we have saved the clean data for each section. 
 
 \pagebreak 
 
@@ -404,7 +412,7 @@ If you haven't completed the previous section then you can load the following da
 # data frame read in and saved in R as "cph"
 
 
-cph <- read.csv(here("data/copenhagen_descriptive.csv"),
+cph <- read.csv(here::here("data", "copenhagen_descriptive.csv"),
                 stringsAsFactors = FALSE) 
 ```
 
@@ -413,64 +421,82 @@ cph <- read.csv(here("data/copenhagen_descriptive.csv"),
 
 ### Dataset description and tabulation   
 
-### Describe signs and symptoms of cases  
+### Describe signs and symptoms of cases 
 
-There are two possible ways of doing this, one is to go through each of the symptoms using the table command (version 1). 
-The other is to use a *for-loop*, which repeats the procedure for each of the variables defined (version 2). 
-
-The *cbind* function attaches columns of datasets together. 
-
-
+We will use 2x2 tables with percentages to describe the signs and symptoms of 
+all the cases. To do this, we must tabulate the counts, calculate the proportions
+of those counts, and then combine those into a single table. Here's an example
+of the table for cases that have diarrhoea:
 
 ```{r describe_signs_and_symptoms}
-# Version 1
-
 # create a frequency table diarrhoea among cases
-a <- table(cph$diarrhoea[cph$case == 1], cph$case[cph$case == 1])
+a <- table(cph$diarrhoea[cph$case == 1])
 
 # frequencies divided by total cases (as proportion) and rounded to one decimal place
-
-props <- round(a / 215 * 100, digits = 1)
+props <- round(prop.table(a) * 100, digits = 1)
 
 # bind a column (cbind) to the above table with:
-
-b <- cbind(a, props)
-
-
-# alternatively you can use the prop.table function instead of manual calcuation
-  # b <- cbind(a, round(prop.table(a)*100, digits = 1))
-
+b <- cbind(n = a, prop = props)
+b
 ```
+
+However, we have a lot of variables we want to do this over, it's better to
+write a function that can do this for us over and over again. The key to writing
+a function to to look at a procedure and think about what parts stay the same
+and what parts change. In the case of our 2x2 table, the only thing that changes
+is the vector we want to describe. If we replace that by a variable called
+"x", we can write our function like so:
+
+```{r describe_signs_and_symptoms_fun}
+twobytwo <- function(x) {
+  # create a frequency table diarrhoea among cases
+  a <- table(x)
+
+  # frequencies divided by total cases (as proportion) and rounded to one decimal place
+  props <- round(prop.table(a) * 100, digits = 1)
+
+  # bind a column (cbind) to the above table with:
+  b <- cbind(n = a, prop = props)
+  b
+}
+```
+
+> **n.b.** This function is *portable*, meaning that I can copy it to any other
+> R script and it will work exactly the same. 
+
+Now that we have our function, we can create the table with just one line:
+
+```{r use_fun}
+twobytwo(cph$diarrhoea[cph$case == 1])
+twobytwo(cph$bloody[cph$case == 1])
+```
+
+Of course, we have several variables, we don't necessarily want to write this
+over and over, so we will use a function called `lapply()`. This function takes
+a data frame, list, or vector, applies a function over each variable separately,
+and then returns a list of results. If we were to use `lapply()` to get the 
+results from above, we might do this:
+
+```{r use_lapply_1}
+vars <- c("diarrhoea", "bloody")
+lapply(cph[cph$case == 1, vars, drop = FALSE], FUN = twobytwo)
+```
+
+Now you try it with the following variables:
+
+```{r lapply_vars}
+vars <- c("diarrhoea", "bloody", "vomiting", "abdo", "nausea", "fever", "headache", "jointpain")
+```
+
 
 \pagebreak
 
-```{r describe_part_2}
+```{r describe_part_2, echo = FALSE}
   # Version 2
 
 # define the variables which you would like to look at and save as "vars"
 vars <- c("diarrhoea", "bloody", "vomiting", "abdo", "nausea", "fever", "headache", "jointpain")
-
-# start the for loop by saying, for all the variables saved in "vars" do:
-for (var in vars) {
-  # create a table for one variable at a time among cases and save under "b". 
-      # using squarebrackets: [select row, select column]
-        # select rows which are cases (cph$case==1)
-        # select columns of interest (vars)
-  b <- table(cph[cph$case == 1, var], cph[cph$case == 1, "case"])
-  # same as above to get proportions 
-  b <- cbind(b, round(prop.table(b) * 100, digits = 1))
-  
-  # rename the columns of your output using colnames function 
-  
-  colnames(b) <- c("n", "%")
-  
-  # for interpretation purposes, print the name of the variable as a header in the output
-  print(var)
-  # print the table with frequency (column 1) and percentage (column)
-  print(b)
-  # repeats from the beginning until all the variables have been looped through
-}
-
+lapply(cph[cph$case == 1, vars, drop = FALSE], twobytwo)
 ```
 
 
@@ -481,10 +507,10 @@ summary(cph$incubation[cph$case == 1])
 ```
 
 ### Describe the cohort in terms of person 
+
 ```{r person_cohort}
 # look at age and other variables of interest
-summary(cph$age)
-table(cph$age)
+Hmisc::describe(cph$age)
 ```
 
 
@@ -493,54 +519,60 @@ table(cph$age)
 Remember, you can also refer to a dataset using square brackets, the part before a comma refers to the rows and after refers to columns (named or numerically). Or visually: `cph[row, column]`.
 For example: `cph[ , "age"]` gives you the variable age as a vector, or `cph[2:4 , ]` gives you rows two to four. 
 
-In this case, the for-loop will replace *var* with the variables of interest we have defined in *vars*. 
 
-```{r attak-rates}
-# students and sex
-vars <- c("group", "class", "sex")
+This is a very similar procedure to the 2x2 tables above, except now we want to include the non-cases. 
+We'll demonstrate it for "group" first:
 
-# repeat for each of the variables in the list
-for (var in vars) {
-  # create a basic two by two table
-  # one variable at a time
-  a <- table(cph[, var], cph$case)
-  
-  # create a table of proportions
-  b <- round(prop.table(a, margin = 1) * 100, digits = 1)
-  
-  # bind the column with AR from b to the 2by2 table in a
-  c <- cbind(a, b[, 2])
-  
-  # rename your columns
-  
-  colnames(c) <- c("non case", "case", "AR%")
-  
-  # print variable name to make output easier to understand
-  print(var)
-  print(c)
-}
-
-```
-
-
-The same can be done with just a single variable 
-
-```{r, attak-rate-sv}
-# total
-# create a basic table
-a <- table(cph$case)
+```{r attack-rate-group}
+tab  <- table(cph$group, cph$case)
 
 # create a table of proportions
-b <- round(prop.table(a) * 100, digits = 1)
+prop <- round(prop.table(tab, margin = 1) * 100, digits = 1)
 
 # bind the column with AR from b to the 2by2 table in a
-total <- cbind(a, b)
+res  <- cbind(tab, prop[, 2, drop = TRUE])
 
-# rename colnames
-colnames(total) <- c("n", "AR%")
+# rename your columns
+colnames(res) <- c("non case", "case", "AR%")
+res
+```
+
+Much like the function we used above, only one thing changes: the variable of
+interest, but we also need to have a vector of cases to complete the table.
+Since functions should be stand-alone, we will create another variable called
+"case":
+
+```{r attack-rate-fun}
+AR <- function(x, case) {
+  tab  <- table(x, case)
+
+  # create a table of proportions
+  prop <- round(prop.table(tab, margin = 1) * 100, digits = 1)
+
+  # bind the column with AR from b to the 2by2 table in a
+  res  <- cbind(tab, prop[, 2, drop = TRUE])
+
+  # rename your columns
+  colnames(res) <- c("non case", "case", "AR%")
+  res
+}
+```
+
+We can see that it works for group:
+
+```{r attack-rate-group-2}
+AR(cph$group, case = cph$case)
 ```
 
 
+Now we can use it with lapply, supplying our "case" argument after the function
+name. This is explained in the help documentation for "lapply"
+
+```{r attack-rate-lapply}
+# students and sex
+vars <- c("group", "class", "sex")
+lapply(cph[vars], AR, case = cph$case)
+```
 
 To see how to combine this code to create a ready-to-present table for exporting see the appendix. 
 
@@ -590,7 +622,7 @@ cph$dayonset <- as.Date(refdate + cph$start)
 ### Construct epicurve by day
 It is possible to create an epicurve manually using base-R code (see appendix), however for simplicity, there is a user written function (Daniel Gardener, PHE). 
 The epicurve function allows creation of easily formatted epicurves. To find out more about the function, first load it as above and then click on function in the Global Environment tab on the right of the R Studio window.
-This function uses the gpplot package (use ??ggplot2 to find out more about this function) and so is quite easily manipulated and saved after being created.
+This function uses the ggplot package (use ??ggplot2 to find out more about this function) and so is quite easily manipulated and saved after being created.
 
 
 
@@ -618,7 +650,7 @@ If you haven't completed the previous section then you can load the following da
 # data frame read in and saved in R as "cph"
 
 
-cph <- read.csv(here("data/copenhagen_univariable.csv"), stringsAsFactors = FALSE) 
+cph <- read.csv(here::here("data", "copenhagen_univariable.csv"), stringsAsFactors = FALSE) 
 ```
 
 
@@ -644,7 +676,7 @@ vars <- c("shrimps", "veal", "pasta", "sauce", "champagne", "rocket", "case")
 
 # Convert all of those variables to factor variables and re-order the levels to aid interpretation
 for (var in vars) {
-  cph[, var] <- factor(cph[, var], levels = c(1, 0))
+  cph[[var]] <- factor(cph[[var]], levels = c(1, 0))
 }
 ```
 
@@ -678,7 +710,7 @@ Here we have just chosen to show this in the console (extraction will be shown l
 ```{r lotta_2by2s, results="hide"}
 
 ## vector of variables you want to run in the for-loop
-vars <- c("pasta","veal", "champagne", "sauce", "shrimps")
+vars <- c("pasta", "veal", "champagne", "sauce", "shrimps")
 
 # for each variable run a table and then get the rr out using epi.2by2 from the epiR package
 
@@ -1039,7 +1071,7 @@ See *??read_dta* for details
 
 library(haven)
 
-cph <- read_dta(here("data/copenhagen_stratified.dta"))
+cph <- read_dta(here("data", "copenhagen_stratified.dta"))
 
 ```
 
@@ -1049,7 +1081,7 @@ It is also possible to read in excel files using a package called "readxl".
 
 ```{r, eval = FALSE}
 library("readxl")
-cph <- read_excel(here("data/copenhagen_stratified.xlsx"))
+cph <- read_excel(here("data", "copenhagen_stratified.xlsx"))
 ```
 
 
@@ -1097,9 +1129,8 @@ a
 
 z <- data.frame(unclass(a))
 
-write.xlsx(z,
-           "C:/Users/Desktop/Outbreak module 2015/Copenhagen/table.xlsx",
-           sheetName = "table")
+dir.create("results")
+write.csv(z, file = here("results", "case-results.csv")
 
 
 ```
@@ -1107,7 +1138,7 @@ write.xlsx(z,
 
 
 
-
+<!--
 
 ## Manual epicurve construction using base plotting functions
 
@@ -1167,7 +1198,7 @@ b <- paste0(a$Var2," ", a$Var1)
 cph$starttime <- factor(cph$starttime, levels = b)
 ```
 
-
+-->
 
 ## Using epi.2by2 for investigating dose-response relationships
 
