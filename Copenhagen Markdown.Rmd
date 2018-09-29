@@ -985,6 +985,15 @@ fisher.test(table(cph$pasta, cph$veal))
 # Integrate the analysis steps in one master script file
 This is easily done, if you have saved each of your analyses in a seperate script (e.g. one for cleaning, descriptive, univariable and stratified each), you can create a master script by using the `rmarkdown::render()` function. 
 
+Open a new R file and save it as `runAll.R`. Inside of this script, put the following:
+
+```
+rmarkdown::render(here::here("reports", "01-intro-clean.R"))
+rmarkdown::render(here::here("reports", "02-descriptive-stats.R"))
+rmarkdown::render(here::here("reports", "03-univariate-analyses.R"))
+rmarkdown::render(here::here("reports", "04-stratified-analyses.R"))
+```
+
 
 \pagebreak
 
