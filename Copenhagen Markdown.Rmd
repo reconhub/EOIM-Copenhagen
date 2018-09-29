@@ -618,7 +618,7 @@ If you haven't completed the previous section then you can load the following da
 # data frame read in and saved in R as "cph"
 
 
-cph <- read.csv(here("data/copenhagen_univariable.csv"), stringsAsFactors = FALSE) 
+cph <- read.csv(here::here("data", "copenhagen_univariable.csv"), stringsAsFactors = FALSE) 
 ```
 
 
@@ -669,32 +669,37 @@ shrimp <- epiR::epi.2by2(counts, method = "cohort.count")
 shrimp
 ```
 
+Now that we know how to create this table, we can create a function with two arguments that will return the 2x2 table:
 
-This example involves using the `epi.2by2()` function from the *epiR* package. To make things faster (but not necessarily easier to understand) it has been run in a for-loop and the output has been hidden because it is very long. 
 
-With extra code you could extract information from epi.2by and piece together an output table like in STATA.
-Here we have just chosen to show this in the console (extraction will be shown later in the case study).
-
-```{r lotta_2by2s, results="hide"}
-
-## vector of variables you want to run in the for-loop
-vars <- c("pasta","veal", "champagne", "sauce", "shrimps")
-
-# for each variable run a table and then get the rr out using epi.2by2 from the epiR package
-
-for (var in vars) {
-  # create table with the variable of interest by case classification
-  a <- table(cph[, var], cph$case)
+```{r get_2by2_fun}
+epi_2by2 <- function(var, case) {
+  # Create a table with exposure and outcome variables
+  counts <- table(var, case)
   
-  # pass your counts table to epi.2by2
-  test <- epi.2by2(a,  method = "cohort.count")
+  # Apply epi.2by2 function to the table
+  res <- epiR::epi.2by2(counts, method = "cohort.count")
   
-  # print the output of the table in the console and label which variable it is
-  print(var)
-  print(test)
+  # return the output
+  res
 }
 ```
 
+
+Now we can use this function to calcualte the epi tables for each variable:
+
+```{r lotta_2by2s}
+## vector of variables you want to run in the for-loop
+vars <- c("pasta", "veal", "champagne", "sauce", "shrimps")
+my2by2s <- lapply(cph[vars], epi_2by2, case = cph$case)
+```
+
+Because the output is large, we can view them one by one with the `$` operator:
+
+```{r view_2by2}
+my2by2s$veal
+my2by2s$shrimps
+```
 
 
 
@@ -782,54 +787,39 @@ t.test(cph$age ~ cph$sex)
 Look at the food items that seem most suspicious to you. 
 Hint: it's pasta and veal
 
-There is two possible ways to do this. The first is to use the wilcox.test again, and the second is to calculate ORs using the `epi.2by2()` function. Using the `epi.2by2()` function for dose responses is a bit more dense (traditionally this would be done using regression), so we have not shown it here; if you would like to see the code for this it is available in the appendix. 
+There is two possible ways to do this. The first is to use the wilcox.test again, and the second is to calculate ORs using the `epiR::epi.2by2()` function. Using the `epiR::epi.2by2()` function for dose responses is a bit more dense (traditionally this would be done using regression), so we have not shown it here; if you would like to see the code for this it is available in the appendix.
 
-
+Here, we present a function in a different form to test this. Instead of taking
+in two vectors, we are taking the names of both columns to make sure we don't
+include any missing data. 
 
 ```{r test_the_veal}
-
-
-vars <- c("vealD", "pastaD")
-
-
-
-for (var in vars) {
+test_DR <- function(var, case = "case", dataset) {
+  # var is the name of the variable of interest
+  # case is the name of the case definition. Here we set the default to "case"
+  # dataset is the data frame with the variable and case definition
   # selects only those cases where dose response is filled out (not empty) and saves as a dataset
-  dataset <- cph[is.na(cph[var]) == FALSE, ]
+  dataset <- dataset[is.na(dataset[var]) == FALSE, ]
   
   # saves in "form" as a text
   # e.g. "pastaD ~ case" which can then be inserted in the wilcox.test to get dose response
   form <- as.formula(paste0(var, "~", "case"))
   
   # put your formula above in to wilcox using the reduced dataset
-  a <- wilcox.test(form, data = dataset)
+  res <- wilcox.test(form, data = dataset)
   
-  # show a table with doses and case and the wilcox output
-  print(var)
-  print(table(cph[, var], cph$case))
-  print(a)
+  res
 }
-
+test_DR("vealD", case = "case", dataset = cph)
+test_DR("pastaD", case = "case", dataset = cph)
 ```
-
-
-
-
-
-
-
-
 
 
 # Stratified analysis 
 
-
 You can see that those eating pasta or veal as well as drinking champagne have the highest risk of becoming ill. There are, however, many other food items that are associated with an increased risk (even if not statistically significant). At this stage we cannot conclude anything, but need to check for effect modification and confounding. This should be done by stratification.
 
-
-
 If you haven't completed the previous section then you can load the following dataset for the next steps.
-
 
 ```{r read_stratified}
 # read in your data from a csv file 
@@ -839,11 +829,8 @@ If you haven't completed the previous section then you can load the following da
 # data frame read in and saved in R as "cph"
 
 
-cph <- read.csv(here("data/copenhagen_stratified.csv"), stringsAsFactors = FALSE) 
+cph <- read.csv(here::here("data", "copenhagen_stratified.csv"), stringsAsFactors = FALSE) 
 ```
-
-
-
 
 Make sure that your variables of interest are factors in the correct order. 
 Outcome and exposure variables of interest need to be factor variables prior to using the function, in order to be relevelled from (0,1) to (1,0) so that they can be correctly organised in 2-by-2 tables. (We have already done this for our variables)
@@ -871,7 +858,7 @@ The `epi.2by2()` function in the *epiR* package provides similar functionality.
 a <- table(cph$veal, cph$case, cph$pasta)
 
 # Use the epi.2by2 function to calculate RRs (by stating method = "cohort.count")
-mhtable <- epi.2by2(a, method = "cohort.count")
+mhtable <- epiR::epi.2by2(a, method = "cohort.count")
 
 # view the output
 mhtable
@@ -883,8 +870,6 @@ You can then extract various outputs from the `epi.2by2()` table for piecing tog
 Here two levels of `$`-signs are needed, as the function saves outputs to a list. 
 
 ```{r extract_data}
-
-
 # Crude RR
 mhtable$massoc$RR.crude.wald
 
@@ -912,80 +897,42 @@ results
 
 
 
+Like we did before, we can use these steps to write a function:
 
-
-
-
-
-
-
-
-
-
-
-You can then piece these parts together within a for loop to investigate more variables 
-
-
-
-```{r strata_more_variables}
-# We list the exposure variables
-vars <- c("veal", "rocket", "shrimps", "champagne", "sauce")
-
-# Create an empty list to save the output of the loop
-# A list is a collection of dataframes
-outputs <- vector(mode = "list", length = length(vars))
-
-# for each of the exposures of interest, run the stratified analysis from above
-for (var in vars) {
-  b <- table(cph[, var], cph$case, cph$pasta)
-  mh <- epi.2by2(b, method = "cohort.count")
+```{r risk-ratio-fun}
+strata_risk <- function(var, case, strat) {
+  # Make a 3-way table with exposure of interest, the outcome and the stratifying variable, in that order
+  a <- table(var, case, strat)
+  
+  # Use the epi.2by2 function to calculate RRs (by stating method = "cohort.count")
+  mh <- epiR::epi.2by2(a, method = "cohort.count")
+  
+  # combine the output
   resultstable <- rbind(mh$massoc$RR.crude.wald,
                         mh$massoc$RR.strata.wald,
                         mh$massoc$RR.mh.wald)
   rownames(resultstable) <- c("Crude", "Strata 1", "Strata 0", "Adjusted")
-  
-  # save your results table as a dataframe within your outputs list
-  outputs[[var]] <- resultstable
+  resultstable
 }
-
-# view your results
-outputs # Gives crude, stratum-specific and adjusted RRs
-
 ```
 
+Now we can run all of the variables at once
 
-\pagebreak
+```{r strata_more_variables}
+# List the exposure variables
+vars <- c("veal", "rocket", "shrimps", "champagne", "sauce")
+# run strata_risk for each one using pasta as strata
+lapply(cph[vars], strata_risk, case = cph$case, strat = cph$pasta)
+```
 
 The exact same can be done for veal (switch veal and pasta)
 
-
 ```{r, eval = FALSE}
-# We list the exposure variables
+# List the exposure variables ()
 vars <- c("pasta", "rocket", "shrimps", "champagne", "sauce")
-
-# Create an empty list to save the output of the loop
-outputs2 <- vector(mode = "list", length = length(vars))
-
-# for each of the exposures of interest, run the stratified analysis from above
-for (var in vars) {
-  b <- table(cph[, var], cph$case, cph$veal)
-  mh <- epi.2by2(b, method = "cohort.count")
-  resultstable <- rbind(mh$massoc$RR.crude.wald,
-                        mh$massoc$RR.strata.wald,
-                        mh$massoc$RR.mh.wald)
-  rownames(resultstable) <-
-    c("Crude", "Strata 1", "Strata 0", "Adjusted")
-  
-  # save your output table as a dataframe within your list (of dataframes)
-  outputs2[[var]] <- resultstable
-}
-
-# view your results
-outputs2 # Gives crude, stratum-specific and adjusted RRs
-
+# run strata_risk for each one using veal as strata
+lapply(cph[vars], strata_risk, case = cph$case, strat = cph$veal)
 ```
-
-
 
 
 It appears that pasta confounds the association between eating veal and being 
@@ -1004,7 +951,7 @@ fisher.test(table(cph$pasta, cph$veal))
 
 
 # Integrate the analysis steps in one master script file
-This is easily done, if you have saved each of your analyses in a seperate script (e.g. one for cleaning, descriptive, univariable and stratified each), you can create a master script by simply using the *source* function (as we did to read in user-written code) to run each of your scripts
+This is easily done, if you have saved each of your analyses in a seperate script (e.g. one for cleaning, descriptive, univariable and stratified each), you can create a master script by using the `rmarkdown::render()` function. 
 
 
 \pagebreak
